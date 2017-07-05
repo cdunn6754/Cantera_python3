@@ -21,16 +21,31 @@ import cantera as ct
 import numpy as np
 import CompositionReader as cr
 
+#..........................................................................#
+## setup stuff
+
+# user inputs
+mechanism = 'reduced'
+fuel_name = 'heavy'
 
 # Get the specified fuel compositions
-heavy_composition = cr.read_compositions('heavy_fuel.txt')
-light_composition = cr.read_compositions('light_fuel.txt')
+fuel_dict = {'light':'light_fuel.txt',
+             'heavy':'heavy_fuel.txt'
+         }
+composition = cr.read_compositions(fuel_dict[fuel_name])
 
 # define the mechanism and gas
-gas = ct.Solution('r_creck_52.cti') #POLIMI_TOT_1412.cti
+mech_dir = 'mechanisms/'
+mechanism_dict = {'reduced':'r_creck_52.cti',
+                  'full':'POLIMI_TOT_1412.cti'
+              }
+gas = ct.Solution(mech_dir +  mechanism_dict[mechanism])
+
+# ....................................................................#
+## run the simulation
 
 # create a reservoir for the fuel inlet, and set to pure methane.
-gas.TPX = 300.0, ct.one_atm, light_composition
+gas.TPX = 300.0, ct.one_atm, composition
 fuel_in = ct.Reservoir(gas)
 fuel_mw = gas.mean_molecular_weight
 
@@ -91,25 +106,11 @@ dt = 0.0001
 times = np.arange(dt,tfinal,dt)
 
 # data output arrays
-states = ct.SolutionArray(gas, extra=['t', 'tres', 'fuel_mdot'])
+states = ct.SolutionArray(gas, extra=['t', 'tres', 'fuel_mdot', 'Z'])
 for i, time in enumerate(times):
     sim.advance(time)
     tres = 0# combustor.mass/v.mdot(time)
-    states.append(gas.state, t=time, tres=tres, fuel_mdot=m1.mdot(time))
+    states.append(gas.state, t=time, tres=tres, fuel_mdot=m1.mdot(time), Z=Z)
 
-states.write_csv('states.csv')
-exit()
-temperature = states.T
-tres = states.tres
-# species data
-#H2 = states.X[:, gas.species_index('H2')]
-#plt.plot(times, temperature)
-plt.figure(0)
-plt.plot(times,states.X[:, gas.species_index('CH4')])
-plt.title('CH4 concentration')
-
-plt.figure(2)
-plt.plot(times,states.T)
-plt.title('temperature')
-
-plt.show()
+csv_dir = 'csv_files/'
+states.write_csv(csv_dir + fuel_name + '_' + mechanism + '_states.csv')
