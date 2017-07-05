@@ -9,27 +9,22 @@ After the igniter is turned off, the system approaches the steady burning
 solution.
 """
 
+# let me get at my utility functions
+import sys 
+import os
+sys.path.append(os.path.abspath("/home/cdunn3/Python_3.6.1/Cantera/utilities"))
+
 import math
 import csv
 import matplotlib.pyplot as plt
 import cantera as ct
 import numpy as np
+import CompositionReader as cr
 
-#................................................................
-#open the files that describe the molar comps
-fp_heavy = open('/home/cdunn3/Python_2.7/Cantera/Volitile_composition/heavy_fuel.txt')
-fp_light = open('/home/cdunn3/Python_2.7/Cantera/Volitile_composition/light_fuel.txt')
 
-comp_o     =  'O2:0.21, N2:0.79';   # air composition
-# Heavy fuel
-heavy_composition     =  fp_heavy.read()
-# Light Fuel
-light_composition     = fp_light.read()
-
-# close the text file pointers
-fp_heavy.close()
-fp_light.close()
-#................................................................
+# Get the specified fuel compositions
+heavy_composition = cr.read_compositions('heavy_fuel.txt')
+light_composition = cr.read_compositions('light_fuel.txt')
 
 # define the mechanism and gas
 gas = ct.Solution('r_creck_52.cti') #POLIMI_TOT_1412.cti
@@ -102,6 +97,8 @@ for i, time in enumerate(times):
     tres = 0# combustor.mass/v.mdot(time)
     states.append(gas.state, t=time, tres=tres, fuel_mdot=m1.mdot(time))
 
+states.write_csv('states.csv')
+exit()
 temperature = states.T
 tres = states.tres
 # species data
