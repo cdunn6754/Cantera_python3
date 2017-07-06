@@ -3,7 +3,7 @@ A PSR combustor. Two separate streams - one coal volatiles and the other air, bo
 300 K and 1 atm flow into an adiabatic combustor where they mix and burn.
 
 We are interested in the steady-state burning solution. Since at 300 K no
-reaction will occur between methane and air, we need to use an 'igniter' to
+reaction will occur between fuel and air, we need to use an 'igniter' to
 initiate the chemistry. A simple igniter is a pulsed flow of atomic hydrogen.
 After the igniter is turned off, the system approaches the steady burning
 solution.
@@ -109,7 +109,7 @@ times = np.arange(dt,tfinal,dt)
 states = ct.SolutionArray(gas, extra=['t', 'tres', 'fuel_mdot', 'Z'])
 for i, time in enumerate(times):
     sim.advance(time)
-    tres = 0# combustor.mass/v.mdot(time)
+    tres = combustor.mass/(m1.mdot(time) + m2.mdot(time))    #v.mdot(time)
     states.append(gas.state, t=time, tres=tres, fuel_mdot=m1.mdot(time), Z=Z)
 
 csv_dir = 'csv_files/'
