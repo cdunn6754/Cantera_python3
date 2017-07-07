@@ -1,13 +1,22 @@
-"""
-A PSR combustor. Two separate streams - one coal volatiles and the other air, both at
-300 K and 1 atm flow into an adiabatic combustor where they mix and burn.
+# Clint Dunn, cdunn6754@gmail.com, 07-5-17
+# written in Python 3.6.1 on cantera 2.3.0
 
-We are interested in the steady-state burning solution. Since at 300 K no
-reaction will occur between fuel and air, we need to use an 'igniter' to
-initiate the chemistry. A simple igniter is a pulsed flow of atomic hydrogen.
-After the igniter is turned off, the system approaches the steady burning
-solution.
-"""
+## Description
+# A PSR combustor. Two separate streams - one coal volatiles and the other air, both at
+# 300 K and 1 atm flow into an adiabatic and constant pressure
+# combustor where they mix and burn.
+
+# Writen so that we can write out a csv file for a particular combination of 
+# chemical mechanism and fuel composition. It writes these to the csv directory.
+# The ppPsr.py script then reads these csv's and plots/ post processes them.
+
+# From the original Cantera file starter thing that I kept:
+# We are interested in the steady-state burning solution. Since at 300 K no
+# reaction will occur between fuel and air, we need to use an 'igniter' to
+# initiate the chemistry. A simple igniter is a pulsed flow of atomic hydrogen.
+# After the igniter is turned off, the system approaches the steady burning
+# solution.
+
 
 # let me get at my utility functions
 import sys 

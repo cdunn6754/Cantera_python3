@@ -1,4 +1,4 @@
-# Clint Dunn, cdunn6754@gmail.com, 07-15-17
+# Clint Dunn, cdunn6754@gmail.com, 07-5-17
 # written in Python 3.6.1 on cantera 2.3.0
 
 

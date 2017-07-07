@@ -5,7 +5,6 @@ as a function of equivalence ratio, including formation of solid carbon.
 
 import cantera as ct
 import numpy as np
-import sys
 import csv
 import matplotlib.pyplot as plt
 
