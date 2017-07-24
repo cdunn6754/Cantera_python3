@@ -7,6 +7,7 @@ import cantera as ct
 import numpy as np
 import csv
 import matplotlib.pyplot as plt
+import writeSpeciesFile as wf
 
 ##############################################################################
 # Edit these parameters to change the initial temperature, the pressure, and
@@ -16,6 +17,8 @@ T = 295 #room temp
 P = 78000 #laramie atm
 
 species = {S.name: S for S in ct.Species.listFromFile('r_creck_52.cti')}
+
+print ( len(species))
 
 # phases
 # complete_species = [species[S] for S in ('CH4','O2','N2','CO2','H2O')]
@@ -35,7 +38,7 @@ fuel_species = 'CH4'
 mix = ct.Mixture(mix_phases)
 
 # create some arrays to hold the data
-phi = 0.8
+phi = 0.7
 
 # find fuel, nitrogen, and oxygen indices
 ifuel = gas.species_index(fuel_species)
@@ -71,7 +74,7 @@ print ('The equilibrium density: {:0.3f}'.format(gas.density))
 # sort through the species mass fractions to find those which
 # exceed the threshold eps, then store them along with their names in
 # dictionary "relevant_species", I think eps==1e-6 is good
-eps = 1e-4
+eps = 1e-15
 relevant_species = {}
 mass_fraction_sum = 0.
 for i in range(len(gas.species_names)):
@@ -85,11 +88,14 @@ for i in range(len(gas.species_names)):
 for key in relevant_species:
     relevant_species[key] = relevant_species[key]/mass_fraction_sum
 
+total = 0.
 # print them out
 print ('\nNumber of relevant species: {}'.format(len(relevant_species)))
 for key in relevant_species:
     print (key,':\t' ,relevant_species[key])
-        
+    total += relevant_species[key]
 
-
-    
+# Write a file that we can use in openfoam
+print( '\nWriting openfoam files\n')
+for name in relevant_species:
+    wf.writeFile(name ,relevant_species[name])
