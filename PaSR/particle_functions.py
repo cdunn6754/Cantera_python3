@@ -1,7 +1,9 @@
 # Particle class to represent the stochatic particles in the PaSR reactor.
+# also a lot of the functions for evaluating ... 
 
 import numpy as np
 import cantera as ct
+import random
 
 
 class Particle:
@@ -21,7 +23,7 @@ class Particle:
         self.T = T #[K]
             
 
-    # Resetting the properties
+    ## Resetting the properties
     def set_temperature(self, T):
         self.T = T
 
@@ -38,17 +40,19 @@ class Particle:
                 sum += self.composition[specie]
             assert (sum == 1.0), "New mass fractions don't sum to one"
 
-    def set_composition(self, new_comp, check_sum=0):
+    def set_composition(self, new_comp):
         "Set the composition based on a dictionary"
+        
         for specie in self.composition:
-            self.composition[specie] = 0.0
             if specie in new_comp:
                 self.composition[specie] = new_comp[specie]
-                
+            else:
+                self.composition[specie] = 0.0
+
             
             
 
-    # Access functions
+    ## Access property functions
     def get_temperature(self):
         return self.T
 
@@ -87,3 +91,38 @@ def average_properties(particle_list):
     return average_composition, average_temperature
         
             
+def mix_particles(mix_pairs):
+    "Takes a N_mix_pairs length list of 2-tuples of particles passed by reference."
+    "The particles in each 2-tuple are mixed together with IEM from Pope paper"
+    a_list = [random.random() for _ in range(0,len(mix_pairs))]
+    for counter,pair in enumerate(mix_pairs):
+        a = a_list[counter]
+        p1 = mix_pairs[0][0]
+        p2 = mix_pairs[0][1]
+        ## Mixing compositions
+        p1_new_composition = {}
+        p2_new_composition = {}
+        for specie in p1.get_composition():
+            p1_new_composition[specie] = p1.get_composition()[specie] + \
+            0.5*a*(p2.get_composition()[specie] -
+                   p1.get_composition()[specie])
+
+            p2_new_composition[specie] = p2.get_composition()[specie] + \
+            0.5*a*(p1.get_composition()[specie] -
+                   p2.get_composition()[specie])
+
+        # now set the particle compositions
+        p1.set_composition(p1_new_composition)
+        p2.set_composition(p2_new_composition)
+
+
+        ## Mixing the temperatures
+        p1_T = p1.get_temperature()
+        p2_T = p2.get_temperature()
+        
+        p1.set_temperature(p1_T + 0.5*a*(p2_T - p1_T))
+        p2.set_temperature(p2_T + 0.5*a*(p1_T - p2_T))
+
+        
+
+
