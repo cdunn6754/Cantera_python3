@@ -9,7 +9,8 @@ import random
 class Particle:
     "Stochastic Particles"
 
-    def __init__(self, composition, T, gas):
+    def __init__(self, composition, T, gas, Z_oxidizer, Z_fuel, 
+                 mixture_fraction_element):
         
         # set up the composition dict
         self.composition = {}        
@@ -21,8 +22,20 @@ class Particle:
 
         # set up the Temperature
         self.T = T #[K]
-            
 
+        # elemental mass fractions of mf_element for inlet streams
+        self.Z_oxidizer = Z_oxidizer
+        self.Z_fuel = Z_fuel
+
+        # mass fraction element
+        self.mixture_fraction_element = mixture_fraction_element
+
+        # initial mixture fraction
+        gas.TPY = T, 101000, composition
+        self.mixture_fraction = (gas.elemental_mass_fraction(mixture_fraction_element) -
+                                 Z_oxidizer)/(Z_fuel - Z_oxidizer)
+
+        
     ## Resetting the properties
     def set_temperature(self, T):
         self.T = T
@@ -57,24 +70,26 @@ class Particle:
         return self.T
 
     def get_composition(self):
-        return self.composition
+        return self.composition        
 
+    def get_mixture_fraction(self, gas):
+        old_state = gas.TPY
+        gas.TPY = self.T, 101000, self.composition
+        Z_mf_element = gas.elemental_mass_fraction(self.mixture_fraction_element)
+        self.mixture_fraction = (Z_mf_element - self.Z_oxidizer)/ \
+                                (self.Z_fuel - self.Z_oxidizer)
 
-def inflow_outflow(replacement_particles, oxidizer_inflow_composition,
-                   fuel_inflow_composition, oxidizer_inflow_temperature,
-                   fuel_inflow_temperature, N_oxidizer_particles):
-    "replace the particle with the appropriate inflow compsition and temperature"
+        # change the gas back to whatever it was, its passed by reference here
+        gas.TPY = old_state
+        return self.mixture_fraction
 
-    for counter,particle in enumerate(replacement_particles):
-        if counter <= N_oxidizer_particles:
-            particle.set_composition(oxidizer_inflow_composition)
-            particle.set_temperature(oxidizer_inflow_temperature)
-        else:
-            particle.set_composition(fuel_inflow_composition)
-            particle.set_temperature(fuel_inflow_temperature)
+## Functions to investigate the particle list properties
 
 def average_properties(particle_list):
+    "returns 2-tuple of arithmetic averages((compostion_dict), temperature)"
     n_particles = len(particle_list) 
+
+    # composition
     composition_list = [None] * n_particles
     for counter, particle in enumerate(particle_list):
         composition_list[counter] = particle.get_composition()
@@ -83,13 +98,42 @@ def average_properties(particle_list):
     for specie in composition_list[0]:
         average_composition[specie] = sum(composition[specie] for composition in 
                                           composition_list)/n_particles
-        
+    #temperature    
     average_temperature = 0.0
     for particle in particle_list:
         average_temperature += float(particle.get_temperature()/n_particles)
         
     return average_composition, average_temperature
-        
+
+def mixture_fractions(particle_list, gas):
+    "returns a list the same length as particle_list, contains particle mixture fraction"
+    mixture_fraction_list = [None] * len(particle_list)
+    for counter,particle in enumerate(particle_list):
+        mixture_fraction_list[counter] = particle.get_mixture_fraction(gas)
+    return mixture_fraction_list
+
+def density(particle_list, gas):
+    "returns a list the same length as particle_list, contains particle density"
+    density_list = [None] * len(particle_list)
+    # remember the state that gas had
+    old_state = gas.TPY
+    for counter,particle in enumerate(particle_list):
+        gas.TPY = particle.get_temperature(), 101000, particle.get_composition()
+        _,density_list[counter] = gas.TD
+    # set gas back to whatever it was holding earlier
+    gas.TPY = old_state
+    return density_list
+
+def favre_averaged_mixture_fraction(particle_list, gas):
+    density_list = density(particle_list,gas)
+    mixture_fraction_list = mixture_fractions(particle_list, gas)
+    return np.mean([mf*rho for mf,rho in zip(density_list, mixture_fraction_list)]) \
+        / np.mean(density_list)
+    
+
+
+
+## Functions to modify the particle list (mixing and inflow/outflow)
             
 def mix_particles(mix_pairs):
     "Takes a N_mix_pairs length list of 2-tuples of particles passed by reference."
@@ -122,6 +166,19 @@ def mix_particles(mix_pairs):
         
         p1.set_temperature(p1_T + 0.5*a*(p2_T - p1_T))
         p2.set_temperature(p2_T + 0.5*a*(p1_T - p2_T))
+
+def inflow_outflow(replacement_particles, oxidizer_inflow_composition,
+                   fuel_inflow_composition, oxidizer_inflow_temperature,
+                   fuel_inflow_temperature, N_oxidizer_particles):
+    "replace the particle with the appropriate inflow compsition and temperature"
+
+    for counter,particle in enumerate(replacement_particles):
+        if counter <= N_oxidizer_particles:
+            particle.set_composition(oxidizer_inflow_composition)
+            particle.set_temperature(oxidizer_inflow_temperature)
+        else:
+            particle.set_composition(fuel_inflow_composition)
+            particle.set_temperature(fuel_inflow_temperature)
 
         
 
