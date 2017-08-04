@@ -125,10 +125,8 @@ ENV/
 # mypy
 <<<<<<< HEAD
 .mypy_cache/
-=======
-.mypy_cache/
->>>>>>> a35c4db4057177eb34d9256350c89c11f997593a
+
 
 
 # ignore pcikle files
-*.p
+.p
