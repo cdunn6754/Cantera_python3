@@ -16,11 +16,12 @@ n_particles = 1000
 initial_composition = {'H2': 0.05, 'O2': 0.2185, 'N2':0.7315}
 
 # time scales
-tau_res =  1
-tau_mix = 0.1
-dt = 0.005 #[s] should be min(tau_res, tau_mix)/10 according to pope
+tau_res =  2e-3
+tau_mix = 1e-3
+#[s] should be min(tau_res, tau_mix)/10 according to pope
+dt = 0.1 * min([tau_res,tau_mix]) 
 #make sure that dt % cantera_dt = 0
-cantera_dt = 1e-4 #[s]
+cantera_dt = 1e-5 #[s]
 
 # ratio of mass flow rates Oxidizer/(Fuel + Oxidizer)
 P = 0.7
@@ -36,7 +37,7 @@ inflow_key_names = ['O2', 'N2', 'H2']
 gas = ct.Solution(mech)
 
 # mixture fraction
-mixture_fraction_element = 'H'
+mixture_fraction_element = 'O'
 
 # Reaction on/off
 reactions = 0
@@ -44,6 +45,7 @@ reactions = 0
 #..........................................................................#
 # Mixture fraction setup
 gas.TPY = T, 101000, oxidizer_inflow_composition
+
 #elemental mass fraction of mt_element in oxidizer stream
 Z_oxidizer = gas.elemental_mass_fraction(mixture_fraction_element)
 
@@ -85,8 +87,13 @@ p1 = pf.Particle(fuel_inflow_composition, T, gas, Z_oxidizer,
 p2 = pf.Particle(oxidizer_inflow_composition, 288.15, gas, Z_oxidizer,
                 Z_fuel, mixture_fraction_element)
 test_particle_list = [p1,p2]
+print(pf.density(test_particle_list, gas))
 # based on basic I.G.L. the densities should be related like this
 assert(pf.density(test_particle_list, gas)[0] < pf.density(test_particle_list, gas)[1])
+#now do it by hand and check the function
+gas.TPY = p2.get_temperature(), 101000, p2.get_composition()
+_,rho2 = gas.TD
+assert(pf.density([p2],gas)[0] == rho2)
 
 
 ## Inflow/outlfow testing
@@ -129,8 +136,6 @@ pf.mix_particles(mixing_pairs)
 new_mixture_fraction = pf.favre_averaged_mixture_fraction(
     mixing_particle_list,gas)
 mf2 = pf.mixture_fractions(mixing_particle_list,gas)
-print(old_mixture_fraction, new_mixture_fraction)
-print(np.mean(mf1), np.mean(mf2))
 
 ## Favre averaging test 2 a better test
 p1 = pf.Particle(fuel_inflow_composition, T, gas, Z_oxidizer,
@@ -153,6 +158,15 @@ famf1 = (0.5*(rho1*mf1 + rho2*mf2)) / (0.5* (rho1 + rho2))
 famf2 = pf.favre_averaged_mixture_fraction([p3,p4],gas)
 #it would be great if these were the same
 assert(famf1 == famf2)
+
+density_list = pf.density(mixing_particle_list,gas)[20:30]
+mixture_fraction_list = pf.mixture_fractions(mixing_particle_list, gas)[20:30]
+
+#print (density_list, '\n', mixture_fraction_list)
+famf = np.mean([rho*mf for rho,mf in zip(density_list, mixture_fraction_list)]) \
+       / np.mean(density_list)
+
+print(np.mean(mixture_fraction_list), famf)
 
 
 

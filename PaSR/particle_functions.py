@@ -4,6 +4,7 @@
 import numpy as np
 import cantera as ct
 import random
+from scipy.integrate import ode
 
 
 class Particle:
@@ -78,7 +79,6 @@ class Particle:
         Z_mf_element = gas.elemental_mass_fraction(self.mixture_fraction_element)
         self.mixture_fraction = (Z_mf_element - self.Z_oxidizer)/ \
                                 (self.Z_fuel - self.Z_oxidizer)
-
         # change the gas back to whatever it was, its passed by reference here
         gas.TPY = old_state
         return self.mixture_fraction
@@ -127,22 +127,35 @@ def density(particle_list, gas):
 def favre_averaged_mixture_fraction(particle_list, gas):
     density_list = density(particle_list,gas)
     mixture_fraction_list = mixture_fractions(particle_list, gas)
-    return np.mean([mf*rho for mf,rho in zip(mixture_fraction_list,density_list)]) \
+    favre_averaged_mixture_fraction = \
+    np.mean([mf*rho for mf,rho in zip(mixture_fraction_list,density_list)]) \
         / np.mean(density_list)
+    return favre_averaged_mixture_fraction
 
-
-
+def favre_variance_mixture_fraction(particle_list, gas):
+    density_list = density(particle_list,gas)
+    mixture_fraction_list = mixture_fractions(particle_list, gas)
+    famf = favre_averaged_mixture_fraction(particle_list,gas)
+    famf_fluctuations_squared = [(mf - famf)**2 for mf in
+                         mixture_fraction_list]
+    favre_variance_mixture_fraction = \
+    np.mean([fluc * rho for fluc,rho in zip(famf_fluctuations_squared,density_list)]) \
+    / np.mean(density_list)
+    return favre_variance_mixture_fraction
+    
 
 ## Functions to modify the particle list (mixing and inflow/outflow)
 
 def mix_particles(mix_pairs):
     "Takes a N_mix_pairs length list of 2-tuples of particles passed by reference."
     "The particles in each 2-tuple are mixed together with IEM from Pope paper"
-    a_list = [random.random() for _ in range(0,len(mix_pairs))]
     for counter,pair in enumerate(mix_pairs):
-        a = a_list[counter]
-        p1 = mix_pairs[counter][0]
-        p2 = mix_pairs[counter][1]
+        a = 1.#np.random.uniform()
+        p1 = pair[0]
+        p2 = pair[1]
+        if len(p1.get_composition()) != len(p2.get_composition()):
+            print("PROBLEM IN MIXING")
+            exit()
         ## Mixing compositions
         p1_new_composition = {}
         p2_new_composition = {}
@@ -166,6 +179,31 @@ def mix_particles(mix_pairs):
 
         p1.set_temperature(p1_T + 0.5*a*(p2_T - p1_T))
         p2.set_temperature(p2_T + 0.5*a*(p1_T - p2_T))
+
+def mixing_IEM(particle_list,gas, tau_mix, dt):
+    #famf = favre_averaged_mixture_fraction(particle_list,gas)
+
+    mean_compositions, T_avg = average_properties(particle_list)
+    gas.TPY = gas.T, 101000, mean_compositions
+    Y_mean = np.append(gas.Y,T_avg)
+    for particle in particle_list:
+        gas.TPY = particle.get_temperature(), 101000, particle.get_composition()
+        Y = np.append(gas.Y,particle.get_temperature())
+        def f(t, Y, Y_mean):
+            return [-(Yi - mean)/(2.*tau_mix) for Yi,mean in zip(Y,Y_mean)] 
+
+        r = ode(f).set_integrator('vode', method='adams')
+        r.set_initial_value(Y, 0.).set_f_params(Y_mean)
+        t1 = dt
+        dt_ = dt/50.
+        while r.successful() and r.t < t1:
+            r.integrate(r.t+dt_)
+        new_comp = [y/sum(r.y[0:-1]) for y in r.y[0:-1]]
+        new_temp = r.y[-1]
+        gas.TPY = new_temp, 101000, new_comp
+        particle.set_composition_cantera(gas)
+        particle.set_temperature(new_temp)
+
 
 def inflow_outflow(replacement_particles, oxidizer_inflow_composition,
                    fuel_inflow_composition, oxidizer_inflow_temperature,
