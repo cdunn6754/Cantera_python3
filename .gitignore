@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-# ...................................................#
 # my stuff
 
 # for emacs
@@ -9,10 +7,14 @@
 # Plots and outputs
 *.png
 *.csv
+
+# ignore pcikle files
+.p
+
+# Dont really care about the conference stuff
+WWSCI_Fall_2017/
 # ..................................................#
 
-=======
->>>>>>> a35c4db4057177eb34d9256350c89c11f997593a
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -23,10 +25,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-<<<<<<< HEAD
-=======
 env/
->>>>>>> a35c4db4057177eb34d9256350c89c11f997593a
 build/
 develop-eggs/
 dist/
@@ -108,7 +107,6 @@ env/
 
 # virtualenv
 .venv
->>>>>>> a35c4db4057177eb34d9256350c89c11f997593a
 venv/
 ENV/
 
@@ -123,10 +121,4 @@ ENV/
 /site
 
 # mypy
-<<<<<<< HEAD
 .mypy_cache/
-
-
-
-# ignore pcikle files
-.p
