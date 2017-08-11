@@ -14,14 +14,16 @@ import matplotlib.pyplot as plt
 
 ## read the csv files to pandas dataframes
 csv_dir = 'csv_files/'
-light_reduced_states= pd.read_csv(csv_dir + "light_reduced_states.csv")
+light_reduced_states= pd.read_csv(csv_dir + "light_drm_states.csv")
 light_full_states = pd.read_csv(csv_dir + "light_full_states.csv")
-heavy_reduced_states= pd.read_csv(csv_dir + "heavy_reduced_states.csv")
+heavy_reduced_states= pd.read_csv(csv_dir + "heavy_drm_states.csv")
 heavy_full_states= pd.read_csv(csv_dir + "heavy_full_states.csv")
 
 ## get data numpy arrays
 #time
 times = light_full_states.loc[:,'t'].as_matrix() #the times will be the same for all
+long_times = heavy_reduced_states.loc[:,'t'].as_matrix() # times for the longer
+# drm case
 
 #temperatures
 light_full_temps = light_full_states.loc[:,'T'].as_matrix()
@@ -37,7 +39,7 @@ heavy_reduced_tres = heavy_reduced_states.loc[:,'tres'].as_matrix()
 plt.figure(0)
 plt.plot(times,light_reduced_temps, label='light fuel; reduced mechanism')
 plt.plot(times,light_full_temps, label='light fuel; full mechanism')
-plt.plot(times,heavy_reduced_temps, label='heavy fuel; reduced mechanism')
+plt.plot(long_times,heavy_reduced_temps, label='heavy fuel; reduced mechanism')
 plt.plot(times,heavy_full_temps, label='heavy fuel; full mechanism')
 plt.title('Extinction behavior comparison of mechanism and fuel composition')
 plt.xlabel('Time [s]')
@@ -46,7 +48,7 @@ plt.legend()
 
 # residence times
 plt.figure(1)
-plt.plot(times,heavy_reduced_tres, label='heavy fuel; reduced mechanism')
+plt.plot(long_times,heavy_reduced_tres, label='heavy fuel; reduced mechanism')
 # plt.plot(times,light_full_temps, label='light fuel; full mechanism')
 # plt.plot(times,heavy_reduced_temps, label='heavy fuel; reduced mechanism')
 # plt.plot(times,heavy_full_temps, label='heavy fuel; full mechanism')

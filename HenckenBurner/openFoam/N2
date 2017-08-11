@@ -29,7 +29,7 @@ boundaryField
     Coflow_in
     {
         type            fixedValue;
-        value           uniform 0.736864454723;
+        value           uniform 0.736864454747;
     }
     Inert_in
     {

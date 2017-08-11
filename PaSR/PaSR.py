@@ -20,13 +20,13 @@ initial_composition = {'H2': 0.05, 'O2': 0.2185, 'N2':0.7315}
 # time scales
 tau_res =  2e-3
 tau_mix = 2e-4
-dt = 0.1 * min([tau_res, tau_mix])
-#[s] should be min(tau_res, tau_mix)/10 according to pope
+dt = 0.1 * min([tau_res, tau_mix]) #[s] should be min(tau_res, tau_mix)/10 
+# according to pope
 #make sure that dt % cantera_dt = 0
 cantera_dt = 1e-5 #[s]
 
 # ratio of mass flow rates Oxidizer/(Fuel + Oxidizer)
-P = 0.6
+P = 0.7
 
 # inlet conditions
 oxidizer_inflow_composition = {'O2': 0.23, 'N2':0.77}

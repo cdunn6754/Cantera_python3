@@ -1,6 +1,5 @@
 """
-Adiabatic flame temperature and equilibrium composition for a fuel/air mixture
-as a function of equivalence ratio, including formation of solid carbon.
+Script to isobaric and adiabatiacally d=equilibrate the methane coflow depending on what equiv ratio we want. It also can write out BC files for openfoam of speices that are relevant
 """
 
 import cantera as ct
@@ -15,15 +14,16 @@ import writeSpeciesFile as wf
 
 T = 295 #room temp
 P = 78000 #laramie atm
+mech = 'DRM_22_benzene.cti'
 
-species = {S.name: S for S in ct.Species.listFromFile('r_creck_52.cti')}
+species = {S.name: S for S in ct.Species.listFromFile(mech)}
 
-print ( len(species))
+print (len(species))
 
 # phases
 # complete_species = [species[S] for S in ('CH4','O2','N2','CO2','H2O')]
 # gas = ct.Solution(thermo='IdealGas', species=complete_species)
-gas = ct.Solution('r_creck_52.cti')
+gas = ct.Solution(mech)
 carbon = ct.Solution('graphite.xml')
 
 # the phases that will be included in the calculation, and their initial moles
@@ -74,12 +74,12 @@ print ('The equilibrium density: {:0.3f}'.format(gas.density))
 # sort through the species mass fractions to find those which
 # exceed the threshold eps, then store them along with their names in
 # dictionary "relevant_species", I think eps==1e-6 is good
-eps = 1e-15
+eps = 1e-10
 relevant_species = {}
 mass_fraction_sum = 0.
-for i in range(len(gas.species_names)):
+for i,specie in enumerate(gas.species_names):
     if gas.Y[i] >= eps:
-        current_name = gas.species_names[i]
+        current_name = specie
         current_mass_fraction = gas.Y[i]
         mass_fraction_sum = mass_fraction_sum + current_mass_fraction
         relevant_species[current_name] = current_mass_fraction

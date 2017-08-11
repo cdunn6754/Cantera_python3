@@ -13,6 +13,9 @@
 
 # Dont really care about the conference stuff
 WWSCI_Fall_2017/
+
+# Or the openfoam files
+openFoam/
 # ..................................................#
 
 # Byte-compiled / optimized / DLL files

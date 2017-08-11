@@ -34,7 +34,7 @@ import CompositionReader as cr
 ## setup stuff
 
 # user inputs
-mechanism = 'reduced'
+mechanism = 'drm'
 fuel_name = 'heavy'
 
 # Get the specified fuel compositions
@@ -46,7 +46,8 @@ composition = cr.read_compositions(fuel_dict[fuel_name])
 # define the mechanism and gas
 mech_dir = 'mechanisms/'
 mechanism_dict = {'reduced':'r_creck_52.cti',
-                  'full':'POLIMI_TOT_1412.cti'
+                  'full':'POLIMI_TOT_1412.cti',
+                  'drm':'DRM_22_benzene.cti'
               }
 gas = ct.Solution(mech_dir +  mechanism_dict[mechanism])
 
@@ -110,7 +111,7 @@ sim = ct.ReactorNet([combustor])
 
 # take single steps to 6 s, writing the results to a CSV file for later
 # plotting.
-tfinal = 20.0
+tfinal = 40.0
 dt = 0.0001
 times = np.arange(dt,tfinal,dt)
 
